@@ -1,0 +1,8 @@
+create extension if not exists pgcrypto;
+create table if not exists response_sets (id uuid primary key default gen_random_uuid(), name text not null unique, created_at timestamptz not null default now());
+create table if not exists campaigns (id uuid primary key default gen_random_uuid(), name text not null, status text not null default 'draft' check(status in('draft','active','paused')), facebook_post_id text unique, instagram_media_id text unique, response_set_id uuid not null references response_sets(id), created_at timestamptz not null default now());
+create table if not exists responses (id uuid primary key default gen_random_uuid(), response_set_id uuid not null references response_sets(id) on delete cascade, selection int not null check(selection between 1 and 99), title text, message text not null, unique(response_set_id,selection));
+create table if not exists processed_events (event_id text primary key, platform text not null check(platform in('facebook','instagram')), comment_id text not null, post_id text not null, status text not null check(status in('processing','sent','ignored','failed')), error_message text, received_at timestamptz not null default now(), processed_at timestamptz);
+create index if not exists processed_events_comment_idx on processed_events(platform,comment_id);
+alter table response_sets enable row level security; alter table campaigns enable row level security; alter table responses enable row level security; alter table processed_events enable row level security;
+-- Server-side code uses the service-role key. Never expose that key to a browser/client.
