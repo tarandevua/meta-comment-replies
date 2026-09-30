@@ -22,6 +22,8 @@ Vercel + TypeScript + Supabase backend for a simple interaction: a user comments
 ## Security
 POST webhooks are accepted only when `X-Hub-Signature-256` validates against `META_APP_SECRET`. Tokens and the Supabase service-role key are server-only. Never expose them to frontend code. Webhook deduplication is persisted in Postgres, not Vercel process memory.
 
+Failed deliveries can be reclaimed atomically for up to five attempts. A processing claim interrupted by a terminated invocation becomes reclaimable after two minutes; completed and ignored events remain permanently deduplicated. Apply every migration in `supabase/migrations/` in filename order.
+
 ## Campaign model
 Infrastructure is content-agnostic. A campaign links a Facebook post ID and/or Instagram media ID to a response set. A response set contains `selection -> message`. Tarot can therefore be one response set while later campaigns such as *Mensajes del Universo* use the same code.
 

@@ -70,7 +70,6 @@ export interface Database {
 
       processed_events: {
         Row: {
-          id: string;
           event_id: string;
           platform: string;
           comment_id: string;
@@ -79,9 +78,10 @@ export interface Database {
           error_message: string | null;
           received_at: string;
           processed_at: string | null;
+          attempts: number;
+          processing_started_at: string;
         };
         Insert: {
-          id?: string;
           event_id: string;
           platform: string;
           comment_id: string;
@@ -90,9 +90,10 @@ export interface Database {
           error_message?: string | null;
           received_at?: string;
           processed_at?: string | null;
+          attempts?: number;
+          processing_started_at?: string;
         };
         Update: {
-          id?: string;
           event_id?: string;
           platform?: string;
           comment_id?: string;
@@ -101,12 +102,24 @@ export interface Database {
           error_message?: string | null;
           received_at?: string;
           processed_at?: string | null;
+          attempts?: number;
+          processing_started_at?: string;
         };
         Relationships: [];
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      claim_processed_event: {
+        Args: {
+          p_event_id: string;
+          p_platform: string;
+          p_comment_id: string;
+          p_post_id: string;
+        };
+        Returns: boolean;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
