@@ -1,26 +1,32 @@
 import { db } from "../lib/db.js";
-import type { CommentEvent } from "../types.js";
+import type { CommentEvent, EventStatus, IgnoredReason } from "../types.js";
 
-export async function claimEvent(e: CommentEvent): Promise<boolean> {
+export async function claimEvent(
+  event: CommentEvent,
+  campaignId: string | null,
+): Promise<boolean> {
   const { data, error } = await db().rpc("claim_processed_event", {
-    p_event_id: e.eventId,
-    p_platform: e.platform,
-    p_comment_id: e.commentId,
-    p_post_id: e.postId,
+    p_event_id: event.eventId,
+    p_platform: event.platform,
+    p_comment_id: event.commentId,
+    p_post_id: event.postId,
+    p_campaign_id: campaignId,
   });
   if (error) throw error;
   return data;
 }
+
 export async function finishEvent(
   eventId: string,
-  status: "sent" | "ignored" | "failed",
-  errorMessage?: string,
+  status: Exclude<EventStatus, "processing">,
+  details: { reason?: IgnoredReason; errorMessage?: string } = {},
 ): Promise<void> {
   const { error } = await db()
     .from("processed_events")
     .update({
       status,
-      error_message: errorMessage ?? null,
+      reason: details.reason ?? null,
+      error_message: details.errorMessage ?? null,
       processed_at: new Date().toISOString(),
     })
     .eq("event_id", eventId);

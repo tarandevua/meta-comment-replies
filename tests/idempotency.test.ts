@@ -28,12 +28,13 @@ describe("event idempotency", () => {
 
   it("claims through the atomic database function", async () => {
     mocks.rpc.mockResolvedValue({ data: true, error: null });
-    await expect(claimEvent(event)).resolves.toBe(true);
+    await expect(claimEvent(event, "campaign-1")).resolves.toBe(true);
     expect(mocks.rpc).toHaveBeenCalledWith("claim_processed_event", {
       p_event_id: event.eventId,
       p_platform: event.platform,
       p_comment_id: event.commentId,
       p_post_id: event.postId,
+      p_campaign_id: "campaign-1",
     });
   });
 
