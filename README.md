@@ -30,6 +30,14 @@ Infrastructure is content-agnostic. A campaign links a Facebook post ID and/or I
 ## Important Meta note
 Meta APIs, permissions and messaging restrictions are versioned and change over time. Keep `META_GRAPH_VERSION` explicit and verify the current official Meta documentation before enabling production traffic or changing platform adapters. The Instagram adapter is intentionally isolated for that reason.
 
+The platform adapters were verified against Meta's v26.0 documentation on 2026-09-30:
+
+- Facebook private replies use `POST /{PAGE_ID}/messages` with a Page access token and require `pages_messaging`: [Meta Facebook Private Replies](https://developers.facebook.com/documentation/business-messaging/messenger-platform/discovery/private-replies).
+- Instagram private replies using Facebook Login use `POST /{INSTAGRAM_ACCOUNT_ID}/messages`, a Facebook Page access token, and a body containing `recipient.comment_id`: [Meta Instagram Private Replies](https://developers.facebook.com/documentation/instagram-platform/private-replies).
+- The documented Instagram permissions for this flow are `instagram_basic`, `instagram_manage_comments`, and `pages_read_engagement`. Subscribe to the `comments` webhook field.
+
+Both platforms allow one private reply within seven days of the comment. Follow-up messaging is available only after the recipient responds and is then subject to the documented messaging window.
+
 ## Vercel note
 The handlers are short-lived API work and do not rely on persistent local state. External Meta calls use timeouts. Vercel currently supports Web-standard Request/Response functions; Node runtime/version should also be kept aligned with Vercel's supported production runtimes.
 
