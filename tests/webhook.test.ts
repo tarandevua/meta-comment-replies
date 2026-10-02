@@ -20,6 +20,18 @@ const payload = {
   }] }],
 };
 
+const instagramPayload = {
+  object: "instagram",
+  entry: [{ changes: [{
+    field: "comments",
+    value: {
+      id: "comment-2",
+      media: { id: "media-1" },
+      text: "7",
+    },
+  }] }],
+};
+
 function request(body: string, valid = true): Request {
   const signature = valid
     ? `sha256=${createHmac("sha256", "test-app-secret").update(body).digest("hex")}`
@@ -37,6 +49,9 @@ describe("POST webhook", () => {
     vi.stubEnv("META_VERIFY_TOKEN", "long-test-verify-token");
     vi.stubEnv("META_APP_SECRET", "test-app-secret");
     vi.stubEnv("META_GRAPH_VERSION", "v99.0");
+    vi.stubEnv("INSTAGRAM_ENABLED", "false");
+    vi.stubEnv("INSTAGRAM_ACCOUNT_ID", "");
+    vi.stubEnv("INSTAGRAM_ACCESS_TOKEN", "");
     vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
   });
@@ -53,6 +68,25 @@ describe("POST webhook", () => {
     const response = await POST(request(JSON.stringify(payload)));
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({ received: true, events: 1, failed: 1 });
+  });
+
+  it("ignores Instagram events when Instagram is disabled", async () => {
+    const response = await POST(request(JSON.stringify(instagramPayload)));
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ received: true, events: 0, failed: 0 });
+    expect(processComment).not.toHaveBeenCalled();
+  });
+
+  it("processes Instagram events when Instagram is enabled and configured", async () => {
+    vi.stubEnv("INSTAGRAM_ENABLED", "true");
+    vi.stubEnv("INSTAGRAM_ACCOUNT_ID", "instagram-account-1");
+    vi.stubEnv("INSTAGRAM_ACCESS_TOKEN", "instagram-token");
+    processComment.mockResolvedValue(undefined);
+
+    const response = await POST(request(JSON.stringify(instagramPayload)));
+
+    expect(response.status).toBe(200);
+    expect(processComment).toHaveBeenCalledWith(expect.objectContaining({ platform: "instagram" }));
   });
 
   it("rejects an invalid signature before processing", async () => {

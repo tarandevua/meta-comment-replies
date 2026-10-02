@@ -16,7 +16,8 @@ export async function GET(req: Request): Promise<Response> {
 
 export async function POST(req: Request): Promise<Response> {
   const raw = await req.text();
-  if (!verifyMetaSignature(raw, req.headers.get("x-hub-signature-256"), env().META_APP_SECRET)) {
+  const config = env();
+  if (!verifyMetaSignature(raw, req.headers.get("x-hub-signature-256"), config.META_APP_SECRET)) {
     return new Response("Invalid signature", { status: 401 });
   }
 
@@ -27,8 +28,10 @@ export async function POST(req: Request): Promise<Response> {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const events = normalizeWebhook(payload);
-  const results = await Promise.allSettled(events.map(processComment));
+  const events = normalizeWebhook(payload).filter(
+    (event) => event.platform !== "instagram" || config.INSTAGRAM_ENABLED,
+  );
+  const results = await Promise.allSettled(events.map((event) => processComment(event)));
   const failed = results.filter((result) => result.status === "rejected").length;
   return Response.json(
     { received: true, events: events.length, failed },

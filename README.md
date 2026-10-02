@@ -81,12 +81,13 @@ Create response sets, responses, and campaigns in Supabase. Do not place post ID
 | `META_GRAPH_VERSION` | Explicit configured Graph API version; never silently bumped |
 | `FACEBOOK_PAGE_ID` | Page used by the Facebook private-reply adapter |
 | `FACEBOOK_PAGE_ACCESS_TOKEN` | Server-only Page access token |
+| `INSTAGRAM_ENABLED` | Set to `true` to process Instagram events; defaults to `false` |
 | `INSTAGRAM_ACCOUNT_ID` | Instagram professional account used by its adapter |
 | `INSTAGRAM_ACCESS_TOKEN` | Server-only token for Instagram messaging |
 | `SUPABASE_URL` | Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only database key; never expose to client code |
 
-Facebook variables are required only when processing Facebook campaigns; Instagram variables are required only when processing Instagram campaigns. All core webhook and Supabase variables are required at runtime.
+Facebook variables are required only when processing Facebook campaigns. Instagram webhook events are ignored unless `INSTAGRAM_ENABLED=true`; when enabled, both Instagram variables are required. All core webhook and Supabase variables are required at runtime.
 
 ## Migrations and generated types
 
